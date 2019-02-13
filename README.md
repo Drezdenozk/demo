@@ -1,3 +1,4 @@
+Сборка сделана с помощью vue-cli
 # demo_1202
 
 ## Project setup

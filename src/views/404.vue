@@ -1,14 +1,11 @@
 <template>
   <div class="home">
-    Fractions
+    <h1>Not Found</h1>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'fractions',
-  components: {
-    HelloWorld,
-  },
+  name: 'notFound',
 };
 </script>

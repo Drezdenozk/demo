@@ -1,46 +1,76 @@
 <template>
-  <div class="ui-fractions">
-    <div class="ui-fractions__body">
-      <ui-fractions-column></ui-fractions-column>
-      <template v-for="(column, index) in fractionsLength">
-        <ui-fractions-operator :key="`operator-${index}`"></ui-fractions-operator>
-        <ui-fractions-column :key="`column-${index}`"></ui-fractions-column>
-      </template>
-    </div>
-    <div class="ui-fractions__footer">
-      <button @click="fractionsLength++">Add Fractions</button>
-    </div>
+  <div class="ui-input">
+    <input type="text" v-model.trim.number="value" :disabled="disabled"
+           @keypress="keyPressEvent($event)" @input="inputEvent"/>
   </div>
 </template>
 
 <script>
-import UiFractionsColumn from '@/components/ui-fractions/ui-fractions-column.vue';
-import UiFractionsOperator from '@/components/ui-fractions/ui-fractions-operator.vue';
-
 export default {
-  name: 'UiFractions',
+  name: 'UiInput',
+  props: {
+    disabled: {
+      default: false, // Инпут залочен
+      type: Boolean,
+    },
+    definedValue: { // Значения по дефолту
+      type: [
+        String,
+        Number,
+      ],
+      default: null,
+    },
+    onlyNumber: {
+      default: false, // В данном инпуте разрешен только ввод цифр
+      type: Boolean,
+    },
+    onlyOperator: { // В данном инпуте разрешен только ввод математических операторов
+      default: false,
+      type: Boolean,
+    },
+  },
+  watch: {
+    definedValue(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.value = newVal;
+      }
+    },
+  },
   data() {
     return {
-      fractionsLength: 1,
+      value: this.definedValue, // Значение по умолчанию для инпута
     };
   },
-  components: {
-    UiFractionsColumn,
-    UiFractionsOperator,
-  },
   methods: {
-    addColumn() {
-      console.warn('add');
+    /**
+     * Событие input
+     */
+    inputEvent() {
+      if (this.onlyOperator && this.value.length > 1) {
+        this.value = this.value.split('').pop();
+      }
+      this.$emit('input', this.value);
+    },
+    /**
+     * Событие keyPress
+     */
+    keyPressEvent(event) {
+      if (this.onlyNumber && Number.isNaN(parseInt(event.key, 10))) {
+        event.preventDefault();
+      } else if (this.onlyOperator && ['+', '-', '*', '/'].indexOf(event.key) === -1) {
+        event.preventDefault();
+      }
     },
   },
 };
 </script>
 
 <style scoped lang="scss">
-  .ui-fractions__body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
+  input[type="text"] {
+    border: 0px;
+    background: lightgrey;
+    padding: 3px;
+    width: 100%;
+    text-align: center;
   }
 </style>

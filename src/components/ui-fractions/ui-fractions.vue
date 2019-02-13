@@ -1,46 +1,129 @@
 <template>
-  <div class="calculate">
-    <div class="calculate__body">
-      <div class="calculate__column">
-
-      </div>
-      <div class="calculate__operator">
-
-      </div>
-      <div class="calculate__column">
-
-      </div>
+  <div class="ui-fractions">
+    <div class="ui-fractions__body">
+      <ui-fractions-column :key="`column-0`"
+                           @input="(val) => calculate(0, val)">
+      </ui-fractions-column>
+      <template v-for="(column, index) in fractionsLength">
+        <ui-fractions-operator :key="`operator-${index + 1}`"
+                               @input="(val) => calculate(index + 1, val, true)">
+        </ui-fractions-operator>
+        <ui-fractions-column :key="`column-${index + 1}`"
+                             @input="(val) => calculate(index + 1, val)">
+        </ui-fractions-column>
+      </template>
+      <ui-fractions-operator :key="`operator-result`"
+                           :definedValue="`=`"  disabled>
+      </ui-fractions-operator>
+      <ui-fractions-column :key="`column-result`"
+                           :definedValue="computedResult" disabled>
+      </ui-fractions-column>
     </div>
-    <div class="calculate__footer">
-      <button>Add Fractions</button>
+    <div class="ui-fractions__footer">
+      <button @click="fractionsLength++">Add Fractions</button>
     </div>
   </div>
 </template>
 
 <script>
-import  FractionsColumn from '@/components/ui-fractions/ui-fractions-column.vue'
+import UiFractionsColumn from '@/components/ui-fractions/ui-fractions-column.vue';
+import UiFractionsOperator from '@/components/ui-fractions/ui-fractions-operator.vue';
+
+/**
+ * Собственно раз требовалось бить на как можно большее кол-во компонентов
+ * Мы и бьем)
+ * Вообще вместо штуки снизу ВОЗМОЖНО было бы в данном контексте неплохо
+ * юзать eval. Но линт будет против.
+ * @param operator
+ * @param val1
+ * @param val2
+ * @returns {*}
+const applyOperator = (operator, val1, val2) => {
+  let result;
+  switch (operator) {
+    case '-': {
+      result = (val1 - val2);
+      break;
+    }
+    case '*': {
+      result = (val1 * val2);
+      break;
+    }
+    case '/': {
+      result = (val1 / val2);
+      break;
+    }
+    default: {
+      result = (val1 + val2);
+      break;
+    }
+  }
+  return result;
+};
+ */
+
+// Вычисляем наибольший общий делитель
+const nod = (n, m) => {
+  if (m > 0) {
+    return nod(m, n % m);
+  }
+  return Math.abs(n);
+};
+
+// Вычисляем наименьшее общее кратное
+const nok = (x, y) => ((x / nod(x, y) || 0) * y);
+
 export default {
   name: 'UiFractions',
-  props: {
-    msg: String,
+  data() {
+    return {
+      fractionsLength: 1, // Сколько используется дробей по дефолту
+      fractionsObject: {}, // Объект с дробями
+      operatorsObject: {}, // Объект с операторами
+    };
+  },
+  computed: {
+    /**
+     * Собственно сам результат
+     * @returns {*|string|[null,null]}
+     */
+    computedResult() {
+      const denominator = Object.keys(this.fractionsObject)
+        .map(item => this.fractionsObject[item])
+        .reduce((item, prev) => [
+          prev[0] + ((denominator / item[1]) * item[0]),
+          nok(item[1], prev[1]),
+        ], [
+          0,
+          1,
+        ]);
+      return denominator;
+    },
+  },
+  components: {
+    UiFractionsColumn,
+    UiFractionsOperator,
+  },
+  methods: {
+    calculate(index, vals, isOperator) {
+      const workOnObject = isOperator ? 'operatorsObject' : 'fractionsObject';
+      if (!this[workOnObject][index]) {
+        this[workOnObject] = Object.assign({}, this[workOnObject], {
+          [index]: vals,
+        });
+      } else {
+        this[workOnObject][index] = vals;
+      }
+    },
   },
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+  .ui-fractions__body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+  }
 </style>
