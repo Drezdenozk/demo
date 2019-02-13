@@ -12,10 +12,10 @@
                              @input="(val) => calculate(index + 1, val)">
         </ui-fractions-column>
       </template>
-      <ui-fractions-operator :key="`operator-result`"
+      <ui-fractions-operator :key="`operator-result`" v-if="computedResult"
                            :definedValue="`=`"  disabled>
       </ui-fractions-operator>
-      <ui-fractions-column :key="`column-result`"
+      <ui-fractions-column :key="`column-result`" v-if="computedResult"
                            :definedValue="computedResult" disabled>
       </ui-fractions-column>
     </div>
@@ -38,6 +38,7 @@ import UiFractionsOperator from '@/components/ui-fractions/ui-fractions-operator
  * @param val1
  * @param val2
  * @returns {*}
+ */
 const applyOperator = (operator, val1, val2) => {
   let result;
   switch (operator) {
@@ -60,7 +61,6 @@ const applyOperator = (operator, val1, val2) => {
   }
   return result;
 };
- */
 
 // Вычисляем наибольший общий делитель
 const nod = (n, m) => {
@@ -88,16 +88,23 @@ export default {
      * @returns {*|string|[null,null]}
      */
     computedResult() {
-      const denominator = Object.keys(this.fractionsObject)
-        .map(item => this.fractionsObject[item])
-        .reduce((item, prev) => [
-          prev[0] + ((denominator / item[1]) * item[0]),
-          nok(item[1], prev[1]),
-        ], [
-          0,
-          1,
-        ]);
-      return denominator;
+      if ((this.fractionsLength + 1) === Object.keys(this.fractionsObject).length
+        && (this.fractionsLength + 1) === (Object.keys(this.operatorsObject).length
+        + 1)) {
+        const denominator = Object.keys(this.fractionsObject)
+          .map(item => this.fractionsObject[item])
+          .reduce((prev, item) => nok(item[1], prev), 1);
+        const result = Object.keys(this.fractionsObject)
+          .map(item => this.fractionsObject[item])
+          .reduce((prev, item, index) => applyOperator(
+            index === 0 ? '+' : this.operatorsObject[index], prev, ((denominator / item[1]) * item[0]),
+          ), 0);
+        return !result ? false : [
+          result,
+          denominator,
+        ];
+      }
+      return false;
     },
   },
   components: {
@@ -107,7 +114,10 @@ export default {
   methods: {
     calculate(index, vals, isOperator) {
       const workOnObject = isOperator ? 'operatorsObject' : 'fractionsObject';
-      if (!this[workOnObject][index]) {
+      if (vals === '') {
+        delete this[workOnObject][index];
+        this[workOnObject] = Object.assign({}, this[workOnObject]);
+      } else if (!this[workOnObject][index]) {
         this[workOnObject] = Object.assign({}, this[workOnObject], {
           [index]: vals,
         });

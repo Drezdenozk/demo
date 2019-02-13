@@ -1,6 +1,10 @@
 <template>
   <div class="ui-fractions__operator">
-    <ui-input v-model="operator" onlyOperator :disabled="disabled" :definedValue="definedValue"/>
+    <ui-input v-model="operator"
+              @input="$emit('input', operator)"
+              onlyOperator
+              :disabled="disabled"
+              :definedValue="definedValue"/>
   </div>
 </template>
 

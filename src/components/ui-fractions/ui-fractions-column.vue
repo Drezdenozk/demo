@@ -36,6 +36,8 @@ export default {
           this.upPart,
           this.downPart,
         ]);
+      } else {
+        this.$emit('input', '');
       }
     },
   },
